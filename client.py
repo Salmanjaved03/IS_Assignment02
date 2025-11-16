@@ -70,6 +70,7 @@ def receive_loop(sock, session_key, server_public_key, log_file):
     finally:
         sock.settimeout(None)
 
+
 def log_message(file_handle, message):
     """Helper to log to file."""
     file_handle.write(f"{datetime.datetime.now(datetime.timezone.utc).isoformat()} | {message}\n")

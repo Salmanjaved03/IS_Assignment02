@@ -61,9 +61,21 @@ def verify_peer_cert(peer_cert, ca_cert, expected_cn):
         return False
 
     # Check expiry
-    now = datetime.datetime.now(datetime.timezone.utc)
-    if not (peer_cert.not_valid_before_utc <= now <= peer_cert.not_valid_after_utc):
-        print(f"  ❌ CERTIFICATE EXPIRED! Valid from {peer_cert.not_valid_before_utc} to {peer_cert.not_valid_after_utc}")
+    # Support both rust-backed and openssl-backed cryptography attributes
+    not_before = getattr(peer_cert, "not_valid_before", None) or getattr(peer_cert, "not_valid_before_utc", None)
+    not_after = getattr(peer_cert, "not_valid_after", None) or getattr(peer_cert, "not_valid_after_utc", None)
+
+    if not_before is None or not_after is None:
+        print("  ❌ Cannot determine certificate validity period (missing attributes).")
+        return False
+
+    # Build a 'now' compatible with the cert datetime objects (handle naive vs tz-aware)
+    now = datetime.datetime.utcnow()
+    if (getattr(not_before, "tzinfo", None) is not None) or (getattr(not_after, "tzinfo", None) is not None):
+        now = now.replace(tzinfo=datetime.timezone.utc)
+
+    if not (not_before <= now <= not_after):
+        print(f"  ❌ CERTIFICATE EXPIRED! Valid from {not_before} to {not_after}")
         return False
     print("  ✅ Validity Period OK")
 

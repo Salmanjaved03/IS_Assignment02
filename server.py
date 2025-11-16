@@ -13,7 +13,7 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
 HOST = 'localhost'
-PORT = 65432
+PORT = 65433
 
 def get_db_connection():
     """Establishes a connection to the MariaDB database."""
